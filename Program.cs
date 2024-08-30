@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Security.Cryptography;
+using System.Text;
 using System.IO;
 
 class Program
 {
     static List<DiaryEntry> diaryEntries = new List<DiaryEntry>();
     static string filePath = "diaryEntries.txt";
+    private static string encryptionKey = "myencryptionkey123"; 
 
     static void Main(string[] args)
     {
@@ -150,7 +151,9 @@ class Program
         {
             foreach (var entry in diaryEntries)
             {
-                writer.WriteLine($"{entry.Date}|{entry.Title}|{entry.Content}");
+                string line = $"{entry.Date}|{entry.Title}|{entry.Content}";
+                string encryptedLine = Encrypt(line, encryptionKey);
+                writer.WriteLine(encryptedLine);
             }
         }
     }
@@ -164,18 +167,64 @@ class Program
                 string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    var parts = line.Split('|');
+                    string decryptedLine = Decrypt(line, encryptionKey);
+                    var parts = decryptedLine.Split('|');
                     if (parts.Length == 3)
                     {
                         DiaryEntry entry = new DiaryEntry
                         {
                             Date = DateTime.Parse(parts[0]),
-                            Title = parts[1] != null ? parts[1] : string.Empty,
-                            Content = parts[2] != null ? parts[2] : string.Empty
+                            Title = parts[1],
+                            Content = parts[2]
                         };
                         diaryEntries.Add(entry);
                     }
                 }
+            }
+        }
+    }
+
+    static string Encrypt(string plainText, string key)
+    {
+        using (Aes aesAlg = Aes.Create())
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                aesAlg.Key = sha256.ComputeHash(Encoding.UTF8.GetBytes(key));
+            }
+            aesAlg.IV = new byte[16]; // Alustusvektori (IV), oletusarvoisesti nollattu
+
+            ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+            using (MemoryStream msEncrypt = new MemoryStream())
+            {
+                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                {
+                    swEncrypt.Write(plainText);
+                }
+                return Convert.ToBase64String(msEncrypt.ToArray());
+            }
+        }
+    }
+
+    static string Decrypt(string cipherText, string key)
+    {
+        using (Aes aesAlg = Aes.Create())
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                aesAlg.Key = sha256.ComputeHash(Encoding.UTF8.GetBytes(key));
+            }
+            aesAlg.IV = new byte[16]; // Alustusvektori (IV), oletusarvoisesti nollattu
+
+            ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+            using (MemoryStream msDecrypt = new MemoryStream(Convert.FromBase64String(cipherText)))
+            using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+            using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+            {
+                return srDecrypt.ReadToEnd();
             }
         }
     }
