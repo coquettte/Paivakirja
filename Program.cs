@@ -6,7 +6,7 @@ class Program
 {
     static List<DiaryEntry> diaryEntries = new List<DiaryEntry>();
     static string filePath = "diaryEntries.txt";
-    private static string encryptionKey = "myencryptionkey123"; 
+    private static string encryptionKey = "myencryptionkey123";
 
     static void Main(string[] args)
     {
@@ -20,7 +20,8 @@ class Program
             Console.WriteLine("2. Tarkastele merkintöjä");
             Console.WriteLine("3. Muokkaa merkintää");
             Console.WriteLine("4. Poista merkintä");
-            Console.WriteLine("5. Poistu\n");
+            Console.WriteLine("5. Hae merkintöjä");
+            Console.WriteLine("6. Poistu\n");
 
             string choice = Console.ReadLine() ?? string.Empty;
 
@@ -39,6 +40,9 @@ class Program
                     DeleteEntry();
                     break;
                 case "5":
+                    SearchEntries();
+                    break;
+                case "6":
                     running = false;
                     break;
                 default:
@@ -142,6 +146,29 @@ class Program
         else
         {
             Console.WriteLine("Virheellinen numero.");
+        }
+    }
+
+    static void SearchEntries()
+    {
+        Console.WriteLine("Syötä hakusana (otsikko tai sisältö):");
+        string searchTerm = Console.ReadLine() ?? string.Empty;
+
+        var matchingEntries = diaryEntries.FindAll(e =>
+            e.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            e.Content.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+        if (matchingEntries.Count > 0)
+        {
+            Console.WriteLine("\nLöydetyt merkinnät:");
+            foreach (var entry in matchingEntries)
+            {
+                Console.WriteLine($"{entry.Date} - {entry.Title} - {entry.Content}\n");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Ei merkintöjä, jotka vastaavat hakusanaa.");
         }
     }
 
