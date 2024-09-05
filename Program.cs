@@ -5,8 +5,8 @@ using System.IO;
 class Program
 {
     static List<DiaryEntry> diaryEntries = new List<DiaryEntry>();
-    static string filePath = "diaryEntries.txt";
-    private static string encryptionKey = "myencryptionkey123";
+    static string filePath = "entries.txt";
+    private static string encryptionKey = "111111111111111111";
 
     static void Main(string[] args)
     {
@@ -62,7 +62,7 @@ class Program
         Console.WriteLine("Syötä sisältö:");
         string? content = Console.ReadLine();
 
-        DiaryEntry entry = new DiaryEntry
+        DiaryEntry entry = new()
         {
             Date = DateTime.Now,
             Title = title ?? string.Empty,
@@ -219,7 +219,7 @@ class Program
             {
                 aesAlg.Key = sha256.ComputeHash(Encoding.UTF8.GetBytes(key));
             }
-            aesAlg.IV = new byte[16]; // Alustusvektori (IV), oletusarvoisesti nollattu
+            aesAlg.IV = new byte[16];
 
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
@@ -243,7 +243,7 @@ class Program
             {
                 aesAlg.Key = sha256.ComputeHash(Encoding.UTF8.GetBytes(key));
             }
-            aesAlg.IV = new byte[16]; // Alustusvektori (IV), oletusarvoisesti nollattu
+            aesAlg.IV = new byte[16];
 
             ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
